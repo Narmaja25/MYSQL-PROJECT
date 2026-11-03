@@ -1,342 +1,79 @@
-﻿# Cardiology_Hospital_Management_System
+# 🏥 Cardiology Hospital Management System (CHMS)
 
-DROP DATABASE IF EXISTS cardiology_db;
-CREATE DATABASE cardiology_db;
-USE cardiology_db;
+An enterprise-grade relational database ecosystem designed to streamline workflows, manage critical clinical operations, and automate tracking within a specialized cardiology department. 
 
-# Table 1: Patients
-SET Foreign_key_Checks = 0;
-drop table if exists patients;
-CREATE TABLE patients (
-    patient_id INT NOT NULL AUTO_INCREMENT,
-    patient_name VARCHAR(100) NOT NULL,
-    age INT,
-    gender VARCHAR(10),
-    phone VARCHAR(15),
-    city VARCHAR(50),
-    PRIMARY KEY (patient_id)
-);
-SET Foreign_key_Checks = 1;
+This project models complex healthcare relationships—connecting patients, specialized cardiologists, clinical appointments, high-fidelity diagnostic testing, and multi-tier pharmaceutical prescriptions—into a highly optimized, clean database design.
 
-# Table 2: Doctors
-SET Foreign_key_Checks = 0;
-drop table if exists doctors;
-CREATE TABLE doctors (
-    doctor_id INT NOT NULL AUTO_INCREMENT,
-    doctor_name VARCHAR(100) NOT NULL,
-    specialization VARCHAR(100),
-    experience INT,
-    phone VARCHAR(15),
-    PRIMARY KEY (doctor_id),
-     UNIQUE KEY uq_doctors_phone (phone)
-);
-desc doctors;
-SET Foreign_key_Checks = 1;
+---
 
-# Table 3: Appointments
-SET Foreign_key_Checks = 0;
-drop table if exists appointments;
-CREATE TABLE appointments (
-    appointment_id INT NOT NULL AUTO_INCREMENT,
-    patient_id INT NOT NULL,
-    doctor_id INT NOT NULL,
-    appointment_date DATE NOT NULL,
-    appointment_time TIME,
-    status VARCHAR(20) DEFAULT 'Scheduled',
-    PRIMARY KEY (appointment_id),
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id)
-);
-desc appointments;
-SET Foreign_key_Checks = 1;
+## 💎 Repository Architecture & Core Highlights
+* **Normalized Relational Architecture:** 7 fully normalized (`3NF`) tables built to eliminate data redundancy and ensure data integrity.
+* **Idempotent Deployment Pipeline:** Zero-fail initialization script leveraging conditional schema resets and isolated integrity controls (`SET Foreign_key_Checks`).
+* **Advanced Operational Inserts:** Data seed layering executed via robust configurations to prevent runtime exceptions and allow dynamic updates.
+* **Production-Grade Analytics:** Designed to cover advanced multi-table dependencies, aggregate calculations, localized sorting operations, and grouped filters.
 
-# Table 4: Medical Tests
-SET Foreign_key_Checks = 0;
-drop table if exists medical_tests;
-CREATE TABLE medical_tests (
-    test_id INT NOT NULL AUTO_INCREMENT,
-    patient_id INT NOT NULL,
-    test_name VARCHAR(100) NOT NULL,
-    test_date DATE,
-    result VARCHAR(255),
-    cost DECIMAL(10,2),
-    PRIMARY KEY (test_id),
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
-);
-desc medical_tests;
-SET Foreign_key_Checks = 1;
+---
 
-# Table 5: Prescriptions
-SET Foreign_key_Checks = 0;
-drop table if exists prescriptions;
-CREATE TABLE if not exists prescriptions (
-    prescription_id INT NOT NULL AUTO_INCREMENT,
-    patient_id INT NOT NULL,
-    doctor_id INT NOT NULL,
-    prescription_date DATE NOT NULL,
-    notes VARCHAR(255),
-    PRIMARY KEY (prescription_id),
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
-    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id)
-);
-desc prescriptions;
-SET Foreign_key_Checks = 1;
+## 🛠️ Technology Stack & Ecosystem
+* **Core RDBMS Engine:** MySQL v8.0+
+* **Storage Engine Architecture:** `InnoDB` (Enforcing full `ACID` compliance and declarative cascade constraints)
+* **Development Workspace:** VS Code Server Terminal & MySQL Workbench
+* **Database Namespace:** `cardiology_db`
 
-# Table 6: Medicines
-SET Foreign_key_Checks = 0;
-drop table if exists medicines;
-CREATE TABLE medicines (
-    medicine_id INT NOT NULL AUTO_INCREMENT,
-    medicine_name VARCHAR(100) NOT NULL,
-    manufacturer VARCHAR(100),
-    price DECIMAL(10,2),
-    PRIMARY KEY (medicine_id)
-);
-desc medicines;
-SET Foreign_key_Checks = 1;
+---
 
-# Table 7: Prescription Items
-SET Foreign_key_Checks = 0;
-drop table if exists prescription_items;
-CREATE TABLE prescription_items (
-    prescription_id INT NOT NULL,
-    medicine_id INT NOT NULL,
-    dosage VARCHAR(100),
-    duration_days INT,
-    quantity INT,
-    PRIMARY KEY (prescription_id, medicine_id),
-    FOREIGN KEY (prescription_id) REFERENCES prescriptions(prescription_id),
-    FOREIGN KEY (medicine_id) REFERENCES medicines(medicine_id)
-);
-desc prescription_items;
-SET Foreign_key_Checks = 1;
+## 📐 Entity-Relationship Blueprint
 
-#1. Insert sample patient details
-INSERT INTO patients
-(patient_id, patient_name, age, gender, phone, city)
-VALUES
-(1, 'Rahul Kumar', 45, 'Male', '9876501001', 'Srikakulam'),
-(2, 'Priya Sharma', 38, 'Female', '9876501002', 'Visakhapatnam'),
-(3, 'Arjun Reddy', 55, 'Male', '9876501003', 'Vijayawada'),
-(4, 'Sneha Rao', 42, 'Female', '9876501004', 'Hyderabad'),
-(5, 'Kiran Kumar', 60, 'Male', '9876501005', 'Srikakulam')
-As new_data
-ON DUPLICATE KEY UPDATE
-patient_name = new_data.patient_name,
-age = new_data.age,
-gender = new_data.gender,
-phone = new_data.phone,
-city = new_data.city;
+The database ecosystem organizes critical healthcare entities into clear structural logical layers:
 
+```text
+       ┌───────────┐               ┌──────────────┐
+       │  PATIENTS │<─────────────>│ APPOINTMENTS │
+       └─────┬─────┘               └──────┬───────┘
+             │                            │
+             │<───────┐          ┌────────┘
+             │        │          │
+             ▼        ▼          ▼
+   ┌───────────┐   ┌────────────────┐               ┌───────────┐
+   │ MED_TESTS │   │  PRESCRIPTIONS │<─────────────>│  DOCTORS  │
+   └───────────┘   └───────┬────────┘               └───────────┘
+                           │
+                           ▼
+               ┌──────────────────────┐             ┌───────────┐
+               │  PRESCRIPTION_ITEMS  │<───────────>│ MEDICINES │
+               └──────────────────────┘             └───────────┘
+```
 
-#2. Insert sample doctor details
-INSERT INTO doctors
-(doctor_id, doctor_name, specialization, experience, phone)
-VALUES
-(1, 'Dr. Suresh Reddy', 'Cardiologist', 15, '9888001001'),
-(2, 'Dr. Anitha Rao', 'Interventional Cardiologist', 12, '9888001002'),
-(3, 'Dr. Rajesh Kumar', 'Cardiac Surgeon', 18, '9888001003'),
-(4, 'Dr. Lakshmi Devi', 'Cardiologist', 10, '9888001004')
-AS new_data
-ON DUPLICATE KEY UPDATE
-doctor_name = new_data.doctor_name,
-specialization = new_data.specialization,
-experience = new_data.experience,
-phone = new_data.phone;
-select * from doctors;
+### Table Metadata & Constraints Matrix
 
-#3. Insert sample appointment details
-INSERT INTO appointments
-(appointment_id, patient_id, doctor_id, appointment_date, appointment_time, status)
-VALUES
-(1, 1, 1, '2026-11-02', '09:30:00', 'Scheduled'),
-(2, 2, 2, '2026-11-02', '10:00:00', 'Scheduled'),
-(3, 3, 3, '2026-11-03', '11:00:00', 'Scheduled'),
-(4, 4, 1, '2026-11-04', '12:00:00', 'Scheduled'),
-(5, 5, 4, '2026-11-05', '09:00:00', 'Scheduled')
-As new_data
-ON DUPLICATE KEY UPDATE
-patient_id = new_data.patient_id,
-doctor_id = new_data.doctor_id,
-appointment_date = new_data.appointment_date,
-appointment_time = new_data.appointment_time,
-status = new_data.status;
-select * from appointments;
+| Table Name | Operational Scope | Architectural Constraints |
+| :--- | :--- | :--- |
+| **`patients`** | Logs demographics & tracking info for incoming clinical cases. | `patient_id` (Primary Key, Auto-Increment) |
+| **`doctors`** | Stores clinical profiles, cardiology sub-specialties, and experience tiers. | `doctor_id` (PK), `UNIQUE KEY(phone)` |
+| **`appointments`** | Schedules consultations, tracks timetables, and visit statuses. | `appointment_id` (PK), `FK(patient_id)`, `FK(doctor_id)` |
+| **`medical_tests`**| Tracks cardiac diagnostics (ECG, Echo, Lipids) along with specific results and costs. | `test_id` (PK), `FK(patient_id)` |
+| **`prescriptions`**| Links clinical diagnostic decisions directly from doctor to patient. | `prescription_id` (PK), `FK(patient_id)`, `FK(doctor_id)` |
+| **`medicines`** | Central repository for global pharmaceutical pricing and supply channels. | `medicine_id` (PK) |
+| **`prescription_items`** | Intermediary operational matrix mapping active medication quantities and specific dosages. | `Composite PK(prescription_id, medicine_id)` |
 
-#4. Insert sample medical test details
-INSERT INTO medical_tests
-(test_id, patient_id, test_name, test_date, result, cost)
-VALUES
-(1, 1, 'ECG', '2026-10-20', 'Sample result: Normal rhythm', 500.00),
-(2, 2, 'Echocardiogram', '2026-10-21', 'Sample result: Requires doctor review', 2500.00),
-(3, 3, 'Lipid Profile', '2026-10-22', 'Sample result: Cholesterol elevated', 800.00),
-(4, 4, 'Stress Test', '2026-10-23', 'Sample result: Requires doctor review', 1800.00),
-(5, 5, 'ECG', '2026-10-24', 'Sample result: Requires doctor review', 500.00)
-As new_data
-ON DUPLICATE KEY UPDATE
-patient_id = new_data.patient_id,
-test_name = new_data.test_name,
-test_date = new_data.test_date,
-result = new_data.result,
-cost = new_data.cost;
-select * from medical_tests;
+---
 
-#5. Insert sample prescription details
-INSERT INTO prescriptions
-(prescription_id, patient_id, doctor_id, prescription_date, notes)
-VALUES
-(1, 1, 1, '2026-10-20', 'Sample prescription; follow the treating doctor advice'),
-(2, 2, 2, '2026-10-21', 'Sample prescription; follow the treating doctor advice'),
-(3, 3, 3, '2026-10-22', 'Sample prescription; follow the treating doctor advice'),
-(4, 4, 1, '2026-10-23', 'Sample prescription; follow the treating doctor advice'),
-(5, 5, 4, '2026-10-24', 'Sample prescription; follow the treating doctor advice')
-As new_data
-ON DUPLICATE KEY UPDATE
-patient_id = new_data.patient_id,
-doctor_id = new_data.doctor_id,
-prescription_date = new_data.prescription_date,
-notes = new_data.notes;
-select * from prescriptions;
+## 📂 Repository Blueprint
+```directory/
+├── database/
+│   └── cardiology_schema.sql  # Database system installation script
+└── README.md                  # Comprehensive portfolio documentation
+```
 
-#6. Insert sample medicine details
-INSERT INTO medicines
-(medicine_id, medicine_name, manufacturer, price)
-VALUES
-(1, 'Aspirin', 'Sample Pharma A', 50.00),
-(2, 'Atorvastatin', 'Sample Pharma B', 120.00),
-(3, 'Metoprolol', 'Sample Pharma C', 90.00),
-(4, 'Amlodipine', 'Sample Pharma D', 75.00),
-(5, 'Clopidogrel', 'Sample Pharma E', 110.00)
-As new_data
-ON DUPLICATE KEY UPDATE
-medicine_name = new_data.medicine_name,
-manufacturer = new_data.manufacturer,
-price = new_data.price;
-select * from medicines;
+---
 
-#7. Insert sample prescription medicine details
-INSERT INTO prescription_items
-(prescription_id, medicine_id, dosage, duration_days, quantity)
-VALUES
-(1, 1, 'As entered by the treating doctor', 5, 5),
-(1, 2, 'As entered by the treating doctor', 30, 30),
-(2, 3, 'As entered by the treating doctor', 7, 14),
-(3, 4, 'As entered by the treating doctor', 10, 10),
-(4, 5, 'As entered by the treating doctor', 15, 15),
-(5, 2, 'As entered by the treating doctor', 30, 30)
-As new_data
-ON DUPLICATE KEY UPDATE
-dosage = new_data.dosage,
-duration_days = new_data.duration_days,
-quantity = new_data.quantity;
-select * from prescription_items;
+## ⚡ Quick Deployment Guide
 
-#1 .Display all patients
-SELECT * FROM patients;
+To deploy this database cluster locally on your machine, launch your terminal engine and pipe the script directly into your active RDBMS instance:
 
-#2. Display all doctors
-SELECT * FROM doctors;
+1. Access your local MySQL Server terminal instance using your credentials.
+2. Initialize the database container and execute the entire setup from the compiled schema file path.
+3. Run the tracking checks to verify that all seven structural tables are rendering appropriately in the workspace layout.
 
-#3. Display all appointments with patient and doctor names
-SELECT
-    a.appointment_id,
-    p.patient_name,
-    d.doctor_name,
-    a.appointment_date,
-    a.appointment_time,
-    a.status
-FROM appointments AS a
-JOIN patients AS p ON a.patient_id = p.patient_id
-JOIN doctors AS d ON a.doctor_id = d.doctor_id
-ORDER BY a.appointment_date, a.appointment_time;
-
-#4. Display medical test details with patient names
-SELECT
-    p.patient_name,
-    mt.test_name,
-    mt.test_date,
-    mt.result,
-    mt.cost
-FROM medical_tests AS mt
-JOIN patients AS p ON mt.patient_id = p.patient_id
-ORDER BY mt.test_date;
-
-#5. Display prescription and medicine details
-SELECT
-    p.patient_name,
-    d.doctor_name,
-    pr.prescription_date,
-    m.medicine_name,
-    pi.dosage,
-    pi.duration_days,
-    pi.quantity,
-    m.price
-FROM prescription_items AS pi
-JOIN prescriptions AS pr
-    ON pi.prescription_id = pr.prescription_id
-JOIN patients AS p
-    ON pr.patient_id = p.patient_id
-JOIN doctors AS d
-    ON pr.doctor_id = d.doctor_id
-JOIN medicines AS m
-    ON pi.medicine_id = m.medicine_id
-ORDER BY pr.prescription_id, m.medicine_id;
-
-#6. Display the total medical test cost for each patient
-SELECT
-    p.patient_name,
-    SUM(mt.cost) AS total_test_cost
-FROM patients AS p
-JOIN medical_tests AS mt ON p.patient_id = mt.patient_id
-GROUP BY p.patient_id, p.patient_name;
-
-#7. Display patients older than 40 years
-SELECT *
-FROM patients
-WHERE age > 40;
-
-#8.Count the total number of patients
-SELECT COUNT(*) AS total_patients
-FROM patients;
-
-#9. Display doctors with more than 10 years of experience
-SELECT doctor_name, specialization, experience
-FROM doctors
-WHERE experience > 10;
-
-#10. Count appointments for each doctor
-SELECT
-    d.doctor_name,
-    COUNT(a.appointment_id) AS total_appointments
-FROM doctors AS d
-LEFT JOIN appointments AS a
-    ON d.doctor_id = a.doctor_id
-GROUP BY d.doctor_id, d.doctor_name;
-
-#11. Display scheduled appointments 
-SELECT *
-FROM appointments
-WHERE status = 'Scheduled';
-
-#12. Display medicines costing more than ₹80
-SELECT medicine_name, manufacturer, price
-FROM medicines
-WHERE price > 80;
-
-#13. Display each patient's medical tests and costs
-SELECT
-    p.patient_name,
-    mt.test_name,
-    mt.cost
-FROM patients AS p
-JOIN medical_tests AS mt
-    ON p.patient_id = mt.patient_id
-ORDER BY p.patient_name;
-
-#14. Display doctors in alphabetical order
-SELECT *
-FROM doctors
-ORDER BY doctor_name ASC;
-
-#15. Display all tables
-SHOW TABLES;
+---
+*“Optimized data architectures drive precision engineering in modern digital healthcare systems.”*
